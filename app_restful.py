@@ -1,9 +1,11 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request
+from flask_restful import Resource, Api
 import json
 
-# Antes de subir o código execute o seginte comando no terminal:
-# pip install -r requirements.txt
+from habilidades import Habilidades, Habilidade
+
 app = Flask(__name__)
+api = Api(app)
 
 desenvolvedores = [
     {
@@ -24,39 +26,44 @@ desenvolvedores = [
 ]
 
 # Retorna, altera e deleta um desenvolveodr pelo ID
-@app.route("/dev/<int:id>", methods=["GET", "PUT", "DELETE"])
-def desenvolvedor(id):
-    if request.method == 'GET':
+class Desenvolvedor(Resource):
+    def get(self, id):
         try:
             response = desenvolvedores[id]
         except IndexError:
-            menssagem = '"Nenhum registro encontrado."'
+            menssagem = "Nenhum registro encontrado."
             response = {"status": "erro", "menssagem": menssagem}
         except Exception:
             menssagem = "Erro desconhecido. Procure o administrador da APi."
             response = {"status": "erro", "menssagem": menssagem}
-        return jsonify(response)
+        return response
 
-    elif request.method == 'PUT':
+    def put(self, id):
         dados = json.loads(request.data)
         desenvolvedores[id] = dados
-        return jsonify(dados)
+        return {"desenvolvedor": desenvolvedores[id]}
 
-    elif request.method == 'DELETE':
+    def delete(self, id):
+        dados = json.loads(request.data)
         desenvolvedores.pop(id)
-        return jsonify({"status": "sucesso", "menssagem": "Registro excluído"})
+        return  {"status": "sucesso", "menssagem": "Registro excluído"}
 
 #Retorna todos os desenvolvedores e permite registrar um novo desenvolvedor
-@app.route("/dev", methods=["POST", "GET"])
-def lista_desenvolvedores():
-    if request.method == 'POST':
+class ListaDesenvolvedores(Resource):
+    def get(self):
+        return desenvolvedores
+
+    def post(self):
         dados = json.loads(request.data)
         posicao = len(desenvolvedores)
         dados['id'] = posicao
         desenvolvedores.append(dados)
-        return jsonify({'status': 'sucesso', 'menssagem': 'Registro inserido'})
-    elif request.method == 'GET':
-        return jsonify({"desenvolvedores": desenvolvedores})
+        return desenvolvedores[posicao]
+
+api.add_resource(Desenvolvedor, '/dev/<int:id>')
+api.add_resource(ListaDesenvolvedores, '/dev/')
+api.add_resource(Habilidades, '/habilidades/')
+api.add_resource(Habilidade, '/habilidades/<int:id>')
 
 if __name__=='__main__':
     app.run(debug=True)
