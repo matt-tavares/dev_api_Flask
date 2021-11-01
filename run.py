@@ -1,8 +1,6 @@
 from flask import Flask, jsonify, request
 import json
 
-# Antes de subir o código execute o seginte comando no terminal:
-# pip install -r requirements.txt
 app = Flask(__name__)
 
 desenvolvedores = [
